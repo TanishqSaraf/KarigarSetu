@@ -66,12 +66,13 @@ export default function Ledger() {
   const anyFilter = [...params.keys()].length > 0;
   const unreconciledCount = data.transactions.filter((t) => !t.voided && ['open', 'difference'].includes(txnReconState(t, data))).length;
 
-  const exportCSV = () => {
+  const exportCSV = async () => {
     if (!filtered.length) return toast('error', 'Nothing to export — no entries match the filters');
     const csv = ledgerToCSV([...filtered].sort(compareTxns), data.karigars, (t) => TXN_RECON_LABEL[txnReconState(t, data)]);
     const slug = data.settings.shopName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'shop';
-    downloadText(`${slug}-gold-ledger-${today}.csv`, csv, 'text/csv;charset=utf-8');
-    toast('success', `Exported ${filtered.length} ledger entr${filtered.length === 1 ? 'y' : 'ies'}`);
+    const outcome = await downloadText(`${slug}-gold-ledger-${today}.csv`, csv, 'text/csv;charset=utf-8');
+    if (outcome === 'saved') toast('success', `Exported ${filtered.length} ledger entr${filtered.length === 1 ? 'y' : 'ies'}`);
+    else if (outcome === 'failed') toast('error', 'The file could not be saved here. Try again, or open the app in a browser tab.');
   };
 
   return (

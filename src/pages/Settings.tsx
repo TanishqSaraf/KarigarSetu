@@ -72,10 +72,11 @@ export default function Settings() {
     );
   };
 
-  const backup = () => {
+  const backup = async () => {
     const slug = s.shopName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'shop';
-    downloadText(`karigarsetu-backup-${slug}-${today}.json`, JSON.stringify(data, null, 2), 'application/json');
-    toast('success', 'Backup downloaded. Keep it somewhere safe.');
+    const outcome = await downloadText(`karigarsetu-backup-${slug}-${today}.json`, JSON.stringify(data, null, 2), 'application/json');
+    if (outcome === 'saved') toast('success', 'Backup downloaded. Keep it somewhere safe.');
+    else if (outcome === 'failed') toast('error', 'The backup could not be saved here. Try again, or open the app in a browser tab.');
   };
 
   const onRestoreFile = async (file?: File) => {

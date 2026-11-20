@@ -10,7 +10,8 @@
     "typecheck": "tsc -b",
     "test": "vitest run",
     "test:watch": "vitest",
-    "e2e": "node e2e/scenarios.cjs"
+    "e2e": "node e2e/scenarios.cjs",
+    "build:artifact": "node scripts/build-artifact.mjs"
   },
   "dependencies": {
     "@fontsource/ibm-plex-mono": "^5.1.0",

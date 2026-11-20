@@ -60,9 +60,39 @@ export function adjustmentDetail(t: GoldTransaction): string {
   return `Manual adjustment (${dir})`;
 }
 
-/** Trigger a browser download. UTF-8 BOM so Excel shows ₹ and names correctly. */
-export function downloadText(filename: string, text: string, mime: string): void {
-  const blob = new Blob([mime.includes('csv') ? '﻿' + text : text], { type: mime });
+type SaveOutcome = 'saved' | 'declined' | 'failed';
+
+interface DownloadsNS {
+  save(req: { filename: string; data: string | Blob }): Promise<unknown>;
+}
+type ClaudeHost = { use?: (name: 'downloads') => Promise<DownloadsNS | null> };
+
+/**
+ * Offer a text file to the user. Inside the Claude artifact viewer, page-initiated downloads are
+ * blocked, so the viewer's `downloads` capability is used (the viewer confirms the save).
+ * Everywhere else this falls back to a normal browser download.
+ * CSV gets a UTF-8 BOM so Excel shows the rupee sign and names correctly.
+ */
+export async function downloadText(filename: string, text: string, mime: string): Promise<SaveOutcome> {
+  const body = mime.includes('csv') ? '﻿' + text : text;
+  const host = (window as unknown as { claude?: ClaudeHost }).claude;
+  if (host?.use) {
+    const downloads = await host.use('downloads').catch(() => null);
+    if (downloads) {
+      try {
+        await downloads.save({ filename, data: body });
+        return 'saved';
+      } catch (e) {
+        return (e as { code?: string })?.code === 'declined' ? 'declined' : 'failed';
+      }
+    }
+  }
+  browserDownload(filename, body, mime);
+  return 'saved';
+}
+
+function browserDownload(filename: string, body: string, mime: string): void {
+  const blob = new Blob([body], { type: mime });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;

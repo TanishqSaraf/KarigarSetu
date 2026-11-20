@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, MemoryRouter, Route, Routes } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import KarigarDetail from './pages/KarigarDetail';
@@ -11,10 +11,14 @@ import Orders from './pages/Orders';
 import Settings from './pages/Settings';
 import { StoreProvider } from './store/StoreProvider';
 
+// The hosted single-file build runs inside a sandboxed viewer where path URLs are not available,
+// so it keeps the current page in memory instead.
+const Router = import.meta.env.VITE_ROUTER === 'memory' ? MemoryRouter : BrowserRouter;
+
 export default function App() {
   return (
     <StoreProvider>
-      <BrowserRouter>
+      <Router>
         <Routes>
           <Route element={<Layout />}>
             <Route index element={<Dashboard />} />
@@ -29,7 +33,7 @@ export default function App() {
             <Route path="*" element={<NotFound />} />
           </Route>
         </Routes>
-      </BrowserRouter>
+      </Router>
     </StoreProvider>
   );
 }
